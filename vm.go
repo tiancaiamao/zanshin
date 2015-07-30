@@ -496,7 +496,12 @@ func _GLOBAL_REF(vm *VM) error {
 }
 
 func _SET_GLOBAL(vm *VM) error {
-	i := vm.code[vm.pc+1]
+	i := int(vm.code[vm.pc+1])
+	if i >= len(vm.global) {
+		tmp := make([]Value, i+1000)
+		copy(tmp, vm.global)
+		vm.global = tmp
+	}
 	vm.global[i] = vm.val
 	vm.val = valueVOID
 	vm.pc += 2

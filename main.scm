@@ -57,16 +57,17 @@
   (lambda (e)
     (set! *defined* '())
     (set! g.current '())
-    (let ((result (meaning e '() #t)))
+    (let ((result (meaning e '() #t))
+	  (fin (FINISH)))
       (if (null? *defined*)
-	  result
+	  (list->u8vector (append result fin))
 	  (static-wrong "undefined" *defined*)))))
 
 (define compile
   (lambda (e)
     (let ((code (cc e)))
-      (if (pair? code)
-	  (list (list->vector code)
+      (if (u8vector? code)
+	  (cons code 
 		(map (lambda (x)
 		       (cons (car x) (cddr x))) g.current))
 	  code))))
