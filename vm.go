@@ -19,6 +19,7 @@ func (s *stack) Push(v Value) {
 	if s.idx == len(s.data) {
 		tmp := make([]Value, s.idx+1000)
 		copy(tmp, s.data)
+		s.data = tmp
 	}
 
 	s.data[s.idx] = v
@@ -28,6 +29,10 @@ func (s *stack) Push(v Value) {
 func (s *stack) Pop() Value {
 	s.idx--
 	return s.data[s.idx]
+}
+
+func (s *stack) Empty() bool {
+	return s.idx == 0
 }
 
 type Cons struct {
@@ -68,6 +73,44 @@ type Primitive int
 // TODO
 func valuePrimitive(i byte, j byte) Primitive {
 	return Primitive(i)
+}
+
+// don't need it
+func valueEqual(v1 Value, v2 Value) bool {
+	switch v11 := v1.(type) {
+	case Symbol:
+		if v22, ok := v2.(Symbol); ok {
+			return v11 == v22
+		}
+		return false
+	case string:
+		if v22, ok := v2.(string); ok {
+			return v11 == v22
+		}
+		return false
+	case int:
+		if v22, ok := v2.(int); ok {
+			return v11 == v22
+		}
+		return false
+	case Primitive:
+		if v22, ok := v2.(Primitive); ok {
+			return v11 == v22
+		}
+		return false
+	case *Procedure:
+		if v22, ok := v2.(*Procedure); ok {
+			return v11 == v22
+		}
+		return false
+	case *Cons:
+		if v22, ok := v2.(*Cons); ok {
+			return v11 == v22
+		}
+		return false
+	default:
+		return false
+	}
 }
 
 type Procedure struct{}
@@ -113,8 +156,9 @@ func New() *VM {
 
 func (vm *VM) Run(code []byte) error {
 	vm.code = code
+	vm.pc = 0
 
-	for {
+	for i := 0; i < 300; i++ {
 		opcode := vm.code[vm.pc]
 		if opcode == 20 {
 			break
@@ -394,6 +438,7 @@ func _INVOKE2(vm *VM) error {
 	default:
 		return errors.New("invoke2未定义的primitive")
 	}
+	vm.pc++
 	return nil
 }
 
@@ -610,6 +655,9 @@ func _EXTEND_ENV(vm *VM) error {
 }
 
 func _POP_ARG1(vm *VM) error {
+	if vm.stack.Empty() {
+		return errors.New("栈为空不能POP_ARG")
+	}
 	vm.arg1 = vm.stack.Pop()
 	vm.pc++
 	return nil
