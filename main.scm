@@ -1,3 +1,4 @@
+(use srfi-4)
 ;;;--------------------initialize--------------------------
 (define r.init '())
 (define sg.current (make-vector 100))
@@ -11,6 +12,23 @@
 
 (load "lib.scm")
 
+(define description-extend! 
+  (lambda (name description)
+    (set! desc.init 
+          (cons (cons name description) desc.init))))
+
+(define g.init-extend! 
+  (lambda (n)
+    (let ((level (length g.init)))
+      (set! g.init
+            (cons (cons n (cons 'predefined level)) g.init))
+      level )))
+
+(define defprimitive
+  (lambda (name value num)
+    (begin
+      (g.init-extend! name)
+      (description-extend! name (list 'function name num)))))
 ;;;oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 ;;; Describe a predefined value.
 ;;; The description language only represents primitives with their arity:
@@ -57,10 +75,10 @@
   (lambda (e)
     (set! *defined* '())
     (set! g.current '())
-    (let ((result (meaning e '() #t))
-	  (fin (FINISH)))
+    (let* ((e1 (desugar e))
+	   (result (meaning e1 '() #t)))
       (if (null? *defined*)
-	  (list->u8vector (append result fin))
+	  (list->u8vector (append result (FINISH)))
 	  (static-wrong "undefined" *defined*)))))
 
 (define compile

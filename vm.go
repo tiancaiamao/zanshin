@@ -2,6 +2,7 @@ package zanshin
 
 import (
 	"errors"
+	"github.com/tiancaiamao/ouster/log"
 )
 
 var (
@@ -113,21 +114,19 @@ func valueEqual(v1 Value, v2 Value) bool {
 	}
 }
 
-type Procedure struct{}
-
 func valueProcedureP(v Value) bool {
 	_, ok := v.(*Procedure)
 	return ok
 }
 
-type Closure struct {
+type Procedure struct {
 	code []byte
 	pos  int
 	env  Value
 }
 
-func valueMakeClosure(code []byte, pos int, env Value) Value {
-	return &Closure{
+func valueMakeProcedure(code []byte, pos int, env Value) Value {
+	return &Procedure{
 		code: code,
 		pos:  pos,
 		env:  env,
@@ -155,11 +154,14 @@ func New() *VM {
 }
 
 func (vm *VM) Run(code []byte) error {
+	log.Debug("--------run-------")
 	vm.code = code
 	vm.pc = 0
 
 	for i := 0; i < 300; i++ {
 		opcode := vm.code[vm.pc]
+		log.Debug("opcode=", opcode)
+
 		if opcode == 20 {
 			break
 		}
@@ -244,7 +246,7 @@ func _FINISH(vm *VM) error {
 
 func _CREATE_CLOSURE(vm *VM) error {
 	offset := int(vm.code[vm.pc+1])
-	vm.val = valueMakeClosure(vm.code, vm.pc+offset+2, vm.env)
+	vm.val = valueMakeProcedure(vm.code, vm.pc+offset+2, vm.env)
 	vm.pc += 2
 	return nil
 }
@@ -252,7 +254,7 @@ func _CREATE_CLOSURE(vm *VM) error {
 func _FUNCTION_INVOKE(vm *VM) error {
 	fun := vm.fun
 
-	if clo, ok := fun.(*Closure); ok {
+	if clo, ok := fun.(*Procedure); ok {
 		vm.stack.Push(vm.code)
 		vm.stack.Push(vm.pc)
 
@@ -313,7 +315,7 @@ func _INVOKE1(vm *VM) error {
 		// TODO
 		// vm.val = sexp_display(NULL, vm.val, NULL);
 		break
-	case 95:
+	case 95: // primitive?
 		vm.val = valueProcedureP(vm.val)
 	case 96:
 		if vm.val == nil {

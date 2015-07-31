@@ -292,32 +292,14 @@
   (lambda (i)
     (vector-ref sg.current i) ))
 
-(define global-update! 
+(define global-update!
   (lambda (i v)
     (vector-set! sg.current i v) ))
-
-(define g.init-extend! 
-  (lambda (n)
-    (let ((level (length g.init)))
-      (set! g.init
-            (cons (cons n (cons 'predefined level)) g.init))
-      level )))
-
-(define defprimitive
-  (lambda (name value num)
-    (begin
-      (g.init-extend! name)
-      (description-extend! name (list 'function name num)))))
 
 (define get-description 
   (lambda (name)
     (let ((p (assq name desc.init)))
       (and (pair? p) (cdr p)) ) ))
-
-(define description-extend! 
-  (lambda (name description)
-    (set! desc.init 
-          (cons (cons name description) desc.init))))
 
 (define ALTERNATIVE
   (lambda (m1 m2 m3)
