@@ -324,7 +324,7 @@
 
 (define FIX-CLOSURE
   (lambda (m+ arity)
-    (let* ((the-function (append (ARITY=? (+ arity 1)) (EXTEND-ENV)
+    (let* ((the-function (append (ARITY=? arity) (EXTEND-ENV)
                                  m+  (RETURN) ))
            (the-goto (GOTO (length the-function))) )
       (append (CREATE-CLOSURE (length the-goto)) the-goto the-function) ) ))

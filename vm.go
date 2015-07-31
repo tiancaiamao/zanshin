@@ -209,7 +209,7 @@ func _CONSTANT(vm *VM) error {
 		vm.pc += 1
 	case 79:
 		vm.val = int(vm.code[vm.pc+1])
-		vm.pc += 1
+		vm.pc += 2
 	default:
 		return errors.New("常量错误")
 	}
@@ -223,7 +223,16 @@ func _PUSH_VALUE(vm *VM) error {
 }
 
 func _POP_FUNCTION(vm *VM) error {
-	vm.val = vm.stack.Pop()
+	if vm.stack.Empty() {
+		return errors.New("空栈无法出栈")
+	}
+	vm.fun = vm.stack.Pop()
+	switch vm.fun.(type) {
+	case *Procedure:
+	case *Primitive:
+	default:
+		return errors.New("pop出来的不是函数")
+	}
 	vm.pc++
 	return nil
 }
@@ -237,6 +246,7 @@ func _PRESERVE_ENV(vm *VM) error {
 func _RESTORE_ENV(vm *VM) error {
 	env := vm.stack.Pop()
 	vm.env = env
+	vm.pc++
 	return nil
 }
 
@@ -256,7 +266,7 @@ func _FUNCTION_INVOKE(vm *VM) error {
 
 	if clo, ok := fun.(*Procedure); ok {
 		vm.stack.Push(vm.code)
-		vm.stack.Push(vm.pc)
+		vm.stack.Push(vm.pc+1)
 
 		vm.code = clo.code
 		vm.pc = clo.pos
@@ -282,6 +292,7 @@ func _FUNCTION_INVOKE(vm *VM) error {
 			// TODO
 		}
 	} else {
+		log.Debug(vm.fun)
 		return errors.New("没有这个primitive额")
 	}
 	return nil
@@ -445,6 +456,10 @@ func _INVOKE2(vm *VM) error {
 }
 
 func _RETURN(vm *VM) error {
+	_ = "breakpoint"
+	if vm.stack.Empty() {
+		return errors.New("空栈不能弹出!")
+	}
 	vm.pc = vm.stack.Pop().(int)
 	vm.code = vm.stack.Pop().([]byte)
 	return nil
@@ -651,7 +666,7 @@ func _POP_CONS_FRAME(vm *VM) error {
 }
 
 func _EXTEND_ENV(vm *VM) error {
-	vm.env = &Cons{vm.env, vm.val}
+	vm.env = &Cons{vm.val, vm.env}
 	vm.pc++
 	return nil
 }
@@ -690,6 +705,7 @@ func _UNLINK_ENV(vm *VM) error {
 
 func _ARITYEQ(vm *VM) error {
 	op := int(vm.code[vm.pc])
+	_ = "breakpoint"
 	if op >= 71 && op < 75 {
 		if len(vm.val.([]Value)) != op-70 {
 			return errors.New("函数接受参数不一样")
@@ -701,7 +717,7 @@ func _ARITYEQ(vm *VM) error {
 		}
 		vm.pc += 2
 	}
-	return errors.New("arityq不对")
+	return nil
 }
 
 var (
