@@ -2,6 +2,8 @@ package zanshin
 
 import (
 	"errors"
+	"runtime/debug"
+
 	"github.com/tiancaiamao/ouster/log"
 )
 
@@ -145,6 +147,8 @@ type VM struct {
 	stack *stack
 	code  []byte
 	pc    int
+
+	panic []byte
 }
 
 func New() *VM {
@@ -153,7 +157,21 @@ func New() *VM {
 	}
 }
 
-func (vm *VM) Run(code []byte) error {
+var (
+	ErrorPanic = errors.New("vm panic")
+)
+
+func (vm *VM) Run(code []byte) (err error) {
+	vm.panic = nil
+	// we can't trust the input, it maybe malicious or what ever
+	// in the worst case, VM panic will not crash our program
+	defer func() {
+		if x := recover(); x != nil {
+			vm.panic = debug.Stack()
+			err = ErrorPanic
+		}
+	}()
+
 	log.Debug("--------run-------")
 	vm.code = code
 	vm.pc = 0
@@ -167,7 +185,7 @@ func (vm *VM) Run(code []byte) error {
 		}
 
 		instruct := instructions[opcode]
-		err := instruct(vm)
+		err = instruct(vm)
 		if err != nil {
 			return err
 		}
@@ -266,7 +284,7 @@ func _FUNCTION_INVOKE(vm *VM) error {
 
 	if clo, ok := fun.(*Procedure); ok {
 		vm.stack.Push(vm.code)
-		vm.stack.Push(vm.pc+1)
+		vm.stack.Push(vm.pc + 1)
 
 		vm.code = clo.code
 		vm.pc = clo.pos

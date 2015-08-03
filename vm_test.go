@@ -14,6 +14,12 @@ type TestCase struct {
 
 var testcase = []TestCase{
 	TestCase{
+		input:  "test panic",
+		code:   []byte{23, 22, 2, 20},
+		result: nil,
+		error:  true,
+	},
+	TestCase{
 		input:  "(define a 3)",
 		code:   []byte{84, 27, 0, 20},
 		result: valueVOID,
