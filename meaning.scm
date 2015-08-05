@@ -316,3 +316,4 @@
 (define POP-FRAME! (make-parameter (lambda (rank) (list 'POP-FRAME! rank))))
 (define ALLOCATE-FRAME (make-parameter (lambda (size) (list 'ALLOCATE-FRAME size))))
 (define FINISH (make-parameter (lambda () (list 'FINISH))))
+(define EXPLICIT-CONSTANT 'wait)

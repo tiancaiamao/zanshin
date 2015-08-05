@@ -2,14 +2,14 @@
   (define (check-byte j)
     (or (and (<= 0 j) (<= j 255))
 	(static-wrong "Cannot pack this number within a byte" j) ) )
+  (define INVOKE0 (lambda (address)
+		    (case address
+		      ((read)    (list 89))
+		      ((newline) (list 88))
+		      (else (static-wrong "Cannot integrate" address)) ) ))
+  (define EXPLICIT-CONSTANT 'wait)
   (parameterize 
-   ((INVOKE0 (lambda (address)
-	       (case address
-		 ((read)    (list 89))
-		 ((newline) (list 88))
-		 (else (static-wrong "Cannot integrate" address)) ) ))
-    (EXPLICIT-CONSTANT 'wait)
-    (CHECKED-GLOBAL-REF (lambda (i) (list 8 i)))
+   ((CHECKED-GLOBAL-REF (lambda (i) (list 8 i)))
     (SHALLOW-ARGUMENT-REF (lambda (j)
 			    (check-byte j)
 			    (case j
@@ -129,4 +129,3 @@
 	 ((0 1 2 3 4) (list (+ 50 size)))
 	 (else        (list 55 (+ size 1)))))))
    (thunk)))
-
